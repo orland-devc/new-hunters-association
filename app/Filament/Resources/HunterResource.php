@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\HunterTypeEnum;
 use App\Filament\Resources\HunterResource\Pages;
 use App\Filament\Resources\HunterResource\RelationManagers;
 use App\Models\Hunter;
@@ -30,17 +31,23 @@ class HunterResource extends Resource
                     ->required(),
                 Select::make('rank')
                     ->options([
+                        'S' => 'S Rank',
                         'A' => 'A Rank',
                         'B' => 'B Rank',
                         'C' => 'C Rank',
                         'D' => 'D Rank',
                         'E' => 'E Rank',
-                    ])
+                    ]),
+                Select::make('type')
+                    ->required()
+                    ->options(HunterTypeEnum::class)
                     ->required(),
                 TextInput::make('level')
                     ->numeric()
                     ->default(1)
                     ->required(),
+                    
+                
             ]);
     }
 

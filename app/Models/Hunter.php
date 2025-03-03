@@ -17,6 +17,7 @@ class Hunter extends Model
         'name',
         'rank',
         'level',
+        'type'
     ];
 
     // Optional: Define the possible ranks to maintain consistency

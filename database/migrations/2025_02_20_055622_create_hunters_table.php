@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('hunters', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->enum('rank', ['A', 'B', 'C', 'D', 'E']); // Rank column
+            $table->enum('rank', ['S', 'A', 'B', 'C', 'D', 'E']); 
+            $table->enum('type', ['fighter', 'mage', 'assassin', 'tank', 'marksman', 'healer']);
             $table->integer('level')->default(1);
             $table->timestamps();
         });        
