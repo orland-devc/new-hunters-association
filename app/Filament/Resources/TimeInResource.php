@@ -37,16 +37,12 @@ class TimeInResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->label('Discord Username'),
-                Tables\Columns\TextColumn::make('discord_user_id')
-                    ->searchable()
-                    ->sortable()
-                    ->label('Discord User ID'),
-                    Tables\Columns\TextColumn::make('time_in')
-                    ->dateTime()
+                Tables\Columns\TextColumn::make('time_in')
+                    ->dateTime('g:i A')
                     ->sortable()
                     ->label('Time In'),
                 Tables\Columns\TextColumn::make('time_out')
-                    ->dateTime()
+                    ->dateTime('g:i A')
                     ->sortable()
                     ->label('Time Out'),
                 Tables\Columns\TextColumn::make('duration')
@@ -59,7 +55,9 @@ class TimeInResource extends Resource
                         $timeIn = new \Carbon\Carbon($record->time_in);
                         $timeOut = new \Carbon\Carbon($record->time_out);
                         
-                        return $timeIn->diffForHumans($timeOut, ['parts' => 2, 'short' => true, 'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE]);                        
+                        // Calculate the difference in hours and minutes
+                        $duration = $timeIn->diff($timeOut);
+                        return sprintf('%dh %dm', $duration->h, $duration->i); // Format: "Xh Ym"
                     })
                     ->label('Duration'),
                 Tables\Columns\TextColumn::make('created_at')
@@ -71,6 +69,13 @@ class TimeInResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->groups([
+                Tables\Grouping\Group::make('time_in')
+                    ->label('Date')
+                    ->date()
+                    ->collapsible(),
+            ])
+            ->defaultGroup('time_in') // Group by default
             ->filters([
                 Tables\Filters\Filter::make('active_sessions')
                     ->query(fn (Builder $query): Builder => $query->whereNull('time_out'))
@@ -114,7 +119,7 @@ class TimeInResource extends Resource
                 ]),
             ]);
     }
-
+    
     public static function getRelations(): array
     {
         return [

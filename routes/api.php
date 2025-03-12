@@ -12,3 +12,8 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+
+// create a route for testing and return a json response
+Route::get('/test', function () {
+    return '<h1 style="font-family: Poppins">Hello World!</h1>';
+});

@@ -9,11 +9,4 @@ use Filament\Resources\Pages\ListRecords;
 class ListTimeIns extends ListRecords
 {
     protected static string $resource = TimeInResource::class;
-
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\CreateAction::make(),
-        ];
-    }
 }
