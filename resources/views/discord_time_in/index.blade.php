@@ -6,7 +6,7 @@
     <title>Discord Time In Records</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="shortcut icon" href="{{ asset('images/Insignia_Hunters.png') }}" type="image/x-icon">
+    <link rel="icon" href="{{ asset('images/Insignia_Hunters.png') }}" size="96x96" type="image/x-icon">
     <style>
         :root {
             --discord-primary: #5865F2;

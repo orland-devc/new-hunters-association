@@ -13,12 +13,14 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
 
 class TimeInResource extends Resource
 {
     protected static ?string $model = DiscordTimeIn::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clock';
+    protected static ?string $navigationIcon = 'lucide-clock-arrow-up';
     protected static ?string $navigationLabel = 'Discord Time Tracking';
     protected static ?string $modelLabel = 'Discord Time In';
     protected static ?string $pluralModelLabel = 'Discord Time Ins';
@@ -88,17 +90,24 @@ class TimeInResource extends Resource
                 Tables\Filters\Filter::make('time_in'),
             ])
             ->actions([
-                Tables\Actions\Action::make('check_out')
-                    ->action(function (DiscordTimeIn $record): void {
-                        if ($record->time_out === null) {
-                            $record->update(['time_out' => now()]);
-                        }
-                    })
-                    ->requiresConfirmation()
-                    ->hidden(fn (DiscordTimeIn $record): bool => $record->time_out !== null)
-                    ->color('success')
-                    ->icon('heroicon-o-check-circle')
-                    ->label('Check Out'),
+            Tables\Actions\Action::make('check_out')
+                ->action(function (DiscordTimeIn $record): void {
+                    if ($record->time_out === null) {
+                        $record->update(['time_out' => now()]);
+
+                        // Send DM to the Discord bot localhost
+                        Http::post('http://localhost:3000/notify-checkout', [
+                            'discord_user_id' => $record->discord_user_id,
+                            'admin_name' => Auth::user()->name,
+                        ]);
+                    }
+                })
+                ->requiresConfirmation()
+                ->hidden(fn (DiscordTimeIn $record): bool => $record->time_out !== null)
+                ->color('success')
+                ->icon('heroicon-o-check-circle')
+                ->label('Check Out'),
+
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

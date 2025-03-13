@@ -21,7 +21,7 @@ class HunterResource extends Resource
 {
     protected static ?string $model = Hunter::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'lucide-swords';
 
     public static function form(Form $form): Form
     {
