@@ -30,7 +30,6 @@ class DiscordTimeInController extends Controller
         $discordAvatar = $request->discord_avatar;
         $discordDiscriminator = $request->discord_discriminator;
 
-        // Check if user already has an active time-in today
         $existingTimeIn = DiscordTimeIn::where('discord_user_id', $discordUserId)
             ->whereDate('time_in', now()->toDateString())
             ->whereNull('time_out')
@@ -41,7 +40,6 @@ class DiscordTimeInController extends Controller
             return response()->json(['message' => 'User already timed in today!'], 400);
         }
 
-        // Check for existing valid token for this Discord user
         $existingToken = DB::table('oauth_access_tokens')
             ->where('discord_user_id', $discordUserId)
             ->where('revoked', 0)
@@ -51,16 +49,13 @@ class DiscordTimeInController extends Controller
         $tokenString = null;
 
         if ($existingToken) {
-            // Reuse existing token
             $tokenString = $existingToken->id;
         } else {
-            // Generate a new token
             $token = $tokenFactory->make(
                 auth()->guard('api')->user(),
                 'Discord API Token'
             );
 
-            // Update the token with the discord_user_id
             DB::table('oauth_access_tokens')
                 ->where('id', $token->token->id)
                 ->update(['discord_user_id' => $discordUserId]);
@@ -68,7 +63,6 @@ class DiscordTimeInController extends Controller
             $tokenString = $token->accessToken;
         }
 
-        // Save the time-in entry
         $timeIn = DiscordTimeIn::create([
             'discord_user_id' => $discordUserId,
             'discord_username' => $discordUsername,

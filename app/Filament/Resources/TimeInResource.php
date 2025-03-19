@@ -20,7 +20,7 @@ class TimeInResource extends Resource
 {
     protected static ?string $model = DiscordTimeIn::class;
 
-    protected static ?string $navigationIcon = 'lucide-clock-arrow-up';
+    protected static ?string $navigationIcon = 'lucide-hourglass';
     protected static ?string $navigationLabel = 'Discord Time Tracking';
     protected static ?string $modelLabel = 'Discord Time In';
     protected static ?string $pluralModelLabel = 'Discord Time Ins';
@@ -28,6 +28,7 @@ class TimeInResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('time_in', 'desc')
             ->columns([
                 Tables\Columns\ImageColumn::make('discord_avatar')
                     ->circular()
@@ -75,7 +76,7 @@ class TimeInResource extends Resource
                 Tables\Grouping\Group::make('time_in')
                     ->label('Date')
                     ->date()
-                    ->collapsible(),
+                    ->collapsible()
             ])
             ->defaultGroup('time_in') // Group by default
             ->filters([
@@ -90,24 +91,24 @@ class TimeInResource extends Resource
                 Tables\Filters\Filter::make('time_in'),
             ])
             ->actions([
-            Tables\Actions\Action::make('check_out')
-                ->action(function (DiscordTimeIn $record): void {
-                    if ($record->time_out === null) {
-                        $record->update(['time_out' => now()]);
-
-                        // Send DM to the Discord bot localhost
-                        Http::post('http://localhost:3000/notify-checkout', [
-                            'discord_user_id' => $record->discord_user_id,
-                            'admin_name' => Auth::user()->name,
-                        ]);
-                    }
-                })
-                ->requiresConfirmation()
-                ->hidden(fn (DiscordTimeIn $record): bool => $record->time_out !== null)
-                ->color('success')
-                ->icon('heroicon-o-check-circle')
-                ->label('Check Out'),
-
+                Tables\Actions\Action::make('check_out')
+                    ->action(function (DiscordTimeIn $record): void {
+                        if ($record->time_out === null) {
+                            $record->update(['time_out' => now()]);
+    
+                            // Send DM to the Discord bot localhost
+                            Http::post('http://localhost:3000/notify-checkout', [
+                                'discord_user_id' => $record->discord_user_id,
+                                'admin_name' => Auth::user()->name,
+                                'formatted_time' => now()->format('F j, \\a\\t g:i A'),
+                            ]);                            
+                        }
+                    })
+                    ->requiresConfirmation()
+                    ->hidden(fn (DiscordTimeIn $record): bool => $record->time_out !== null)
+                    ->color('success')
+                    ->icon('heroicon-o-check-circle')
+                    ->label('Check Out'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -117,6 +118,13 @@ class TimeInResource extends Resource
                             $records->each(function (DiscordTimeIn $record): void {
                                 if ($record->time_out === null) {
                                     $record->update(['time_out' => now()]);
+                                    
+                                    // Send DM to the Discord bot localhost for each checked-out user
+                                    Http::post('http://localhost:3000/notify-checkout', [
+                                        'discord_user_id' => $record->discord_user_id,
+                                        'admin_name' => Auth::user()->name,
+                                        'formatted_time' => now()->format('F j, \\a\\t g:i A'),
+                                    ]);                                    
                                 }
                             });
                         })
@@ -128,7 +136,7 @@ class TimeInResource extends Resource
                 ]),
             ]);
     }
-    
+        
     public static function getRelations(): array
     {
         return [
