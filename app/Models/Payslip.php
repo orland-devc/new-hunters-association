@@ -13,10 +13,16 @@ class Payslip extends Model
         'employee_id', 
         'payroll_id', 
         'gross_pay', 
+        'reimbursements',
+        'ot_hours',
+        'total_days',
+        'overtime_pay',
         'deductions', 
+        'professional_fee',
         'net_pay', 
         'payment_status'
     ];
+    
 
     public function employee()
     {
@@ -26,5 +32,10 @@ class Payslip extends Model
     public function payroll()
     {
         return $this->belongsTo(Payroll::class);
+    }
+
+    public function reimbursements()
+    {
+        return $this->hasMany(Reimbursement::class);
     }
 }

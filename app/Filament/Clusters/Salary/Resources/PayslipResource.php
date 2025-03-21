@@ -10,9 +10,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Models\Employee;
 
 class PayslipResource extends Resource
 {
@@ -26,37 +24,79 @@ class PayslipResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('employee_id')
-                    ->disabled()
-                    ->default(fn ($request) => $request->user()->employee->id),
+                Forms\Components\Section::make('Payslip Information')
+                    ->columns(2)
+                    ->schema([
+                        Forms\Components\Select::make('employee_id')
+                            ->label('Employee Code')
+                            ->options(Employee::all()->mapWithKeys(function ($employee) {
+                                return [$employee->id => "{$employee->employee_id} ({$employee->name})"];
+                            }))
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->prefixIcon('lucide-square-user-round'),
 
-                Forms\Components\TextInput::make('total_hours')
-                    ->disabled(),
+                        Forms\Components\TextInput::make('total_days')
+                            ->readOnly()
+                            ->label('Total Days')
+                            ->prefixIcon('lucide-calendar-check-2')
+                            ->formatStateUsing(fn ($state) => "{$state} days (" . ($state * 8) . " hours)"),
 
-                Forms\Components\TextInput::make('gross_pay')
-                    ->disabled()
-                    ->default(0),
+                        Forms\Components\TextInput::make('gross_pay')
+                            ->readOnly()
+                            ->default(0)
+                            ->prefixIcon('lucide-philippine-peso')
+                            ->label('Gross Pay'),
 
-                    Forms\Components\TextInput::make('deductions')
-                    ->default(0)
-                    ->numeric() 
-                    ->reactive()
-                    ->afterStateUpdated(function ($state, $set, $get) {
-                        $set('net_pay', $get('gross_pay') - $state);
-                    }),
-                
-                Forms\Components\TextInput::make('net_pay')
-                    ->disabled()
-                    ->default(0)
-                    ->prefix('₱'),
+                        Forms\Components\TextInput::make('ot_hours')
+                            ->readOnly()
+                            ->label('Overtime')
+                            ->prefixIcon('lucide-clock-4')
+                            ->formatStateUsing(fn ($state) => "{$state} hours"),
 
-                Forms\Components\Select::make('payment_status')
-                    ->options([
-                        'pending' => 'Pending',
-                        'paid' => 'Paid',
-                    ])
-                    ->default('pending')
-                    ->required(),
+                        Forms\Components\TextInput::make('overtime_pay')
+                            ->readOnly()
+                            ->label('OT Pay')
+                            ->prefixIcon('lucide-philippine-peso'),
+
+                        Forms\Components\TextInput::make('deductions')
+                            ->default(0)
+                            ->minValue(0)
+                            ->numeric() 
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, $set, $get) {
+                                $set('net_pay', $get('gross_pay') - $state);
+                            })
+                            ->prefixIcon('lucide-philippine-peso'),
+
+                        Forms\Components\TextInput::make('reimbursements')
+                            ->default(0)
+                            ->numeric()
+                            ->prefixIcon('lucide-philippine-peso'),
+
+                        Forms\Components\TextInput::make('professional_fee')
+                            ->default(0)
+                            ->numeric()
+                            ->prefixIcon('lucide-philippine-peso')
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, $set, $get) {
+                                $set('net_pay', $get('gross_pay') + $get('overtime_pay') + $state - $get('deductions'));
+                            }),
+
+                        Forms\Components\TextInput::make('net_pay')
+                            ->readOnly()
+                            ->default(0)
+                            ->prefixIcon('lucide-philippine-peso'),
+
+                        Forms\Components\Select::make('payment_status')
+                            ->options([
+                                'pending' => 'Pending',
+                                'paid' => 'Paid',
+                            ])
+                            ->default('pending')
+                            ->required(),
+                            ]),
             ]);
     }
 
@@ -64,7 +104,7 @@ class PayslipResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('employee.name')->sortable(),
+                Tables\Columns\TextColumn::make('employee.employee_id')->sortable(),
                 Tables\Columns\TextColumn::make('total_hours')
                 ->getStateUsing(function ($record) {
                     $totalMinutes = $record->employee->discordTimeIns()

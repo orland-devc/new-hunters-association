@@ -14,7 +14,7 @@ class DiscordTimeInSeeder extends Seeder
      */
     public function run(): void
     {
-        $today = "2025-03-19"; // Get today's date
+        $today = "2025-03-14"; // Get today's date
         DB::table('discord_time_in')->insert([
             [
                 'discord_user_id' => "1183775956222099499",
@@ -22,7 +22,7 @@ class DiscordTimeInSeeder extends Seeder
                 'discord_avatar' => "868ed0063635f05c4ac8c3384096e6eb",
                 'discord_discriminator' => "0",
                 'time_in' => "$today 08:00:00",
-                'time_out' => "$today 12:00:00",
+                'time_out' => "$today 16:00:00",
             ],
         ]);
     }

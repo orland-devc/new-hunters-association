@@ -2,6 +2,8 @@
 
 namespace App\Filament\Clusters\Salary\Resources;
 
+use App\Enums\EmployeePositionEnum;
+use App\Enums\SalaryTypeEnum;
 use App\Filament\Clusters\Salary;
 use App\Filament\Clusters\Salary\Resources\EmployeeResource\Pages;
 use App\Filament\Clusters\Salary\Resources\EmployeeResource\RelationManagers;
@@ -9,6 +11,8 @@ use App\Models\Employee;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use App\Support\Segment;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class EmployeeResource extends Resource
 {
@@ -22,20 +26,57 @@ class EmployeeResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')->required(),
-                Forms\Components\TextInput::make('email')->email()->required(),
-                Forms\Components\TextInput::make('phone')->tel(),
-                Forms\Components\TextInput::make('position')->required(),
-                Forms\Components\Select::make('salary_type')
-                ->options([
-                    'hourly' => 'Hourly',
-                    'daily' => 'Daily',
-                    'weekly' => 'Weekly',
-                    'biweekly' => 'Biweekly',
-                    'monthly' => 'Monthly',
-                ])
-                ->preload()->required(),
-                Forms\Components\TextInput::make('salary')->numeric()->required(),
+                Forms\Components\Section::make('Personal Information')
+                    ->columns(2)
+                    ->schema([
+                        Forms\Components\TextInput::make('employee_id')
+                            ->default(fn () => Segment::of(Employee::class)->generate()->display())
+                            ->required()
+                            ->formatStateUsing(function ($state) {
+                                return $state ? Segment::toDisplay($state) : Segment::of(Employee::class)
+                                    ->generate()
+                                    ->display();
+                            })
+                            ->maxLength(16)
+                            ->readOnly()
+                            ->prefixIcon('lucide-folder-lock'),
+                        Forms\Components\TextInput::make('discord_id')
+                            ->required()
+                            ->prefixIcon('lucide-bot'),
+                        Forms\Components\TextInput::make('name')
+                            ->prefixIcon('lucide-user')
+                            ->required(),
+                        Forms\Components\Select::make('position')
+
+                            ->options(collect(EmployeePositionEnum::cases())
+                                ->mapWithKeys(fn($position) => [$position->value => $position->getLabel()])
+                                ->toArray()
+                            )
+                            ->prefixIcon('lucide-briefcase-business')
+                            ->required(),
+                        Forms\Components\TextInput::make('email')
+                            ->email()
+                            ->required()
+                            ->prefixIcon('lucide-mail'),
+                        Forms\Components\TextInput::make('phone')
+                            ->tel()
+                            ->prefixIcon('lucide-phone'),
+                        
+                        Forms\Components\Select::make('salary_type')
+                            ->options(collect(SalaryTypeEnum::cases())
+                                ->mapWithKeys(fn($type) => [$type->value => $type->getLabel()])
+                                ->toArray()
+                            )
+                            ->prefixIcon('lucide-hand-coins')
+                            ->required(),
+                            
+                        Forms\Components\TextInput::make('salary')
+                            ->minValue(0)
+                            ->numeric()
+                            ->required()
+                            ->default(0)
+                            ->prefixIcon('lucide-philippine-peso'),
+                    ]),
             ]);
     }
 
@@ -43,8 +84,12 @@ class EmployeeResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('employee_id')->sortable()->searchable(),
                 Tables\Columns\TextColumn::make('name')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('position'),
+                Tables\Columns\TextColumn::make('position')
+                    ->formatStateUsing(fn (string $state) => 
+                        \App\Enums\EmployeePositionEnum::tryFrom($state)?->getLabel() ?? 'Unknown'
+                    ),
                 Tables\Columns\TextColumn::make('salary')->money('PHP'),
                 Tables\Columns\TextColumn::make('salary_type')
                     ->badge(),
@@ -54,7 +99,9 @@ class EmployeeResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\DiscordTimeInsRelationManager::class,
+            RelationManagers\ReimbursementsRelationManager::class,
+            RelationManagers\PayslipRelationManager::class,
         ];
     }
 

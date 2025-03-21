@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\SegmentAble;
 
 class Employee extends Model
 {
-    use HasFactory;
+    use HasFactory, SegmentAble;
 
     protected $fillable = [
+        'employee_id',
         'discord_id',
         'name', 
         'email', 
@@ -35,5 +37,14 @@ class Employee extends Model
         return $this->hasMany(DiscordTimeIn::class, 'discord_user_id', 'discord_id');
     }
 
+    public function reimbursements()
+    {
+        return $this->hasMany(Reimbursement::class);
+    }
+
+    public function getSegmentColumn(): string
+    {
+        return 'employee_id';
+    }
     
 }

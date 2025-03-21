@@ -51,8 +51,8 @@ class PayrollResource extends Resource
                                             ->label('End Date')
                                             ->default(now()->endOfMonth()),
                                     ])
+                                    ->columns(2)
                                     ->columnSpan(3),
-                                    
                                 Forms\Components\TextInput::make('total_amount')
                                     ->live()
                                     ->readOnly()
@@ -66,7 +66,6 @@ class PayrollResource extends Resource
             ]);
     }
 
-
     public static function table(Tables\Table $table): Tables\Table
     {
         return $table
@@ -75,14 +74,15 @@ class PayrollResource extends Resource
                 Tables\Columns\TextColumn::make('end_date')->date(),
                 Tables\Columns\TextColumn::make('total_amount')->money('PHP'),
                 Tables\Columns\TextColumn::make('status')
-                    ->badge()
+                    ->badge(),
             ]);
     }
+    
 
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\PayslipRelationManager::class,
         ];
     }
 

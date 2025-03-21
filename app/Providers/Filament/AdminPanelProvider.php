@@ -30,6 +30,8 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->colors([
                 'primary' => Color::Amber,
+                'secondary' => Color::Blue,
+                'tertiary' => Color::Gray,
             ])
             ->font('Poppins')
             ->favicon( asset('images/Insignia_Hunters.png') )
