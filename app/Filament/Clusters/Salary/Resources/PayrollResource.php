@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\Salary\Resources;
 
+use App\Enums\PayrollStatusEnum;
 use App\Filament\Clusters\Salary;
 use App\Filament\Clusters\Salary\Resources\PayrollResource\Pages;
 use App\Filament\Clusters\Salary\Resources\PayrollResource\RelationManagers;
@@ -32,8 +33,8 @@ class PayrollResource extends Resource
                             ->schema([
                                 Forms\Components\Section::make()
                                     ->schema([
-                                        Forms\Components\Placeholder::make('header')
-                                            ->content(fn ($record) => '₱' . number_format($record?->total_amount ?? 0, 2))
+                                        Forms\Components\Placeholder::make('total_net_pay')
+                                            ->content(fn ($record) => '₱' . number_format($record?->payslips?->sum('net_pay') ?: 0, 2))
                                             ->live()
                                             ->extraAttributes(['class' => 'text-center text-2xl font-bold'])
                                             ->hiddenLabel()
@@ -53,14 +54,6 @@ class PayrollResource extends Resource
                                     ])
                                     ->columns(2)
                                     ->columnSpan(3),
-                                Forms\Components\TextInput::make('total_amount')
-                                    ->live()
-                                    ->readOnly()
-                                    ->default(0)
-                                    ->prefix('₱')
-                                    ->numeric()
-                                    ->label('Total Amount')
-                                    ->hidden() // Hide the original input
                             ])
                     ]),
             ]);
@@ -74,7 +67,8 @@ class PayrollResource extends Resource
                 Tables\Columns\TextColumn::make('end_date')->date(),
                 Tables\Columns\TextColumn::make('total_amount')->money('PHP'),
                 Tables\Columns\TextColumn::make('status')
-                    ->badge(),
+                    ->badge()
+                    ->color(fn ($record) => PayrollStatusEnum::tryFrom($record->status)?->getColor() ?? 'gray'),
             ]);
     }
     

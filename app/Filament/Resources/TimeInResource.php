@@ -91,12 +91,38 @@ class TimeInResource extends Resource
                 Tables\Filters\Filter::make('time_in'),
             ])
             ->actions([
+                Tables\Actions\Action::make('test_send_image')
+                    ->action(function (DiscordTimeIn $record): void {
+                        $fileUrl = asset('images/image.png');
+                        $response = Http::post('http://localhost:3000/send-image', [
+                            'discord_user_id' => $record->discord_user_id,
+                            'file_url' => $fileUrl,
+                        ]);          
+                        
+                        if ($response->successful()) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Success')
+                                ->body('The image was successfully sent!')
+                                ->success()
+                                ->send();
+                        } else {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Error')
+                                ->body('Failed to send the image.')
+                                ->danger()
+                                ->send();
+                        }
+                    })
+                    ->requiresConfirmation()
+                    ->color('secondary')
+                    ->icon('lucide-send')
+                    ->label('Test'),
+
                 Tables\Actions\Action::make('check_out')
                     ->action(function (DiscordTimeIn $record): void {
                         if ($record->time_out === null) {
                             $record->update(['time_out' => now()]);
     
-                            // Send DM to the Discord bot localhost
                             Http::post('http://localhost:3000/notify-checkout', [
                                 'discord_user_id' => $record->discord_user_id,
                                 'admin_name' => Auth::user()->name,
@@ -113,6 +139,18 @@ class TimeInResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    // Tables\Actions\BulkAction::make('test_send_image')
+                    //     ->action(function (Collection $records): void {
+                    //         $records->each(function (DiscordTimeIn $record): void {
+                    //             Http::post('http://localhost:3000/send-image', [
+                    //                 'discord_user_id' => $record->discord_user_id,
+                    //             ]);
+                    //         });
+                    //     })
+                    //     ->requiresConfirmation()
+                    //     ->color('secondary')
+                    //     ->icon('lucide-send')
+                    //     ->label('Test Selected'),
                     Tables\Actions\BulkAction::make('bulk_check_out')
                         ->action(function (Collection $records): void {
                             $records->each(function (DiscordTimeIn $record): void {

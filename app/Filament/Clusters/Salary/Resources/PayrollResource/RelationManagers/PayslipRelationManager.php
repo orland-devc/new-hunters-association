@@ -2,13 +2,12 @@
 
 namespace App\Filament\Clusters\Salary\Resources\PayrollResource\RelationManagers;
 
+use App\Enums\PayslipStatusEnum;
 use App\Filament\Clusters\Salary\Resources\PayslipResource;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class PayslipRelationManager extends RelationManager
 {
@@ -41,7 +40,6 @@ class PayslipRelationManager extends RelationManager
                             });
                 
                         $totalHours = floor($totalMinutes / 60);
-                        $remainingMinutes = $totalMinutes % 60;
                 
                         $fullDays = floor($totalHours / 8);
                         $remainingHours = $totalHours % 8;
@@ -50,19 +48,28 @@ class PayslipRelationManager extends RelationManager
                         if ($remainingHours >= 4) {
                             $dayEquivalent += 0.5; 
                         }
-                
-                        return "{$totalHours}h {$remainingMinutes}m ({$dayEquivalent} days)";
+                        if ($totalHours == '0' || $totalHours == 0) {
+                            return "Did not work";
+                        }
+                        else if ($dayEquivalent == 1) {
+                            return "{$totalHours}h (1 day)";
+                        }
+                        else {
+                            return "{$totalHours}h ({$dayEquivalent} days)";
+                        }
                     })
                     ->sortable()
                     ->label('Total Hours'),
                 Tables\Columns\TextColumn::make('gross_pay')->money('PHP'),
                 Tables\Columns\TextColumn::make('overtime_pay')->money('PHP'),
-                Tables\Columns\TextColumn::make('reimbursements')->money('PHP'),
                 Tables\Columns\TextColumn::make('deductions')->money('PHP'),
                 Tables\Columns\TextColumn::make('net_pay')->money('PHP'),
                 Tables\Columns\TextColumn::make('payment_status')
                     ->badge()
-            ])
+                    ->color(fn ($record) => PayslipStatusEnum::tryFrom($record->payment_status)?->getColor())
+                    ->icon(fn ($record) => PayslipStatusEnum::tryFrom($record->payment_status)?->getIcon())
+
+                ])
             ->filters([
                 //
             ])
@@ -70,7 +77,8 @@ class PayslipRelationManager extends RelationManager
                 Tables\Actions\CreateAction::make(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->label('View Payslip'),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\PayslipStatusEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -19,7 +20,7 @@ return new class extends Migration {
             $table->decimal('overtime_pay', 15, 2)->default(0.00);
             $table->decimal('professional_fee', 15, 2)->default(0.00);
             $table->decimal('net_pay', 15, 2);
-            $table->enum('payment_status', ['pending', 'paid'])->default('pending');
+            $table->string('payment_status')->default('pending')->checkIn(PayslipStatusEnum::values());
             $table->timestamps();
         });
     }

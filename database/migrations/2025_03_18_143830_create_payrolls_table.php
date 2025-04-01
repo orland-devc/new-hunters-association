@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\PayrollStatusEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,7 +13,7 @@ return new class extends Migration {
             $table->date('start_date');
             $table->date('end_date');
             $table->decimal('total_amount', 15, 2)->default(0.00);
-            $table->enum('status', ['pending', 'processed', 'completed'])->default('pending');
+            $table->string('status')->default('pending')->checkIn(PayrollStatusEnum::values());
             $table->decimal('bonus', 10, 2)->nullable()->default(0);
             $table->decimal('overtime_hours', 8, 2)->nullable()->default(0);
             $table->json('deductions_details')->nullable();

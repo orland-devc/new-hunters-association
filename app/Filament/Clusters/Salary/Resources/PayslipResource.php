@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\Salary\Resources;
 
+use App\Enums\PayslipStatusEnum;
 use App\Filament\Clusters\Salary;
 use App\Filament\Clusters\Salary\Resources\PayslipResource\Pages;
 use App\Filament\Clusters\Salary\Resources\PayslipResource\RelationManagers;
@@ -22,6 +23,10 @@ class PayslipResource extends Resource
 
     public static function form(Form $form): Form
     {
+        function calculateNetPay($get) {
+            return (float)$get('gross_pay') + (float)$get('overtime_pay') + (float)$get('professional_fee') + (float)$get('reimbursements') - (float)$get('deductions');
+        }
+                
         return $form
             ->schema([
                 Forms\Components\Section::make('Payslip Information')
@@ -40,8 +45,7 @@ class PayslipResource extends Resource
                         Forms\Components\TextInput::make('total_days')
                             ->readOnly()
                             ->label('Total Days')
-                            ->prefixIcon('lucide-calendar-check-2')
-                            ->formatStateUsing(fn ($state) => "{$state} days (" . ($state * 8) . " hours)"),
+                            ->prefixIcon('lucide-calendar-check-2'),
 
                         Forms\Components\TextInput::make('gross_pay')
                             ->readOnly()
@@ -51,11 +55,11 @@ class PayslipResource extends Resource
 
                         Forms\Components\TextInput::make('ot_hours')
                             ->readOnly()
-                            ->label('Overtime')
-                            ->prefixIcon('lucide-clock-4')
-                            ->formatStateUsing(fn ($state) => "{$state} hours"),
+                            ->label('Overtime (hours)')
+                            ->prefixIcon('lucide-clock-4'),
 
                         Forms\Components\TextInput::make('overtime_pay')
+                            ->numeric()
                             ->readOnly()
                             ->label('OT Pay')
                             ->prefixIcon('lucide-philippine-peso'),
@@ -66,14 +70,18 @@ class PayslipResource extends Resource
                             ->numeric() 
                             ->reactive()
                             ->afterStateUpdated(function ($state, $set, $get) {
-                                $set('net_pay', $get('gross_pay') - $state);
-                            })
+                                $set('net_pay', calculateNetPay($get));
+                            })                            
                             ->prefixIcon('lucide-philippine-peso'),
 
                         Forms\Components\TextInput::make('reimbursements')
                             ->default(0)
                             ->numeric()
-                            ->prefixIcon('lucide-philippine-peso'),
+                            ->prefixIcon('lucide-philippine-peso')
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, $set, $get) {
+                                $set('net_pay', calculateNetPay($get));
+                            }),                            
 
                         Forms\Components\TextInput::make('professional_fee')
                             ->default(0)
@@ -81,7 +89,7 @@ class PayslipResource extends Resource
                             ->prefixIcon('lucide-philippine-peso')
                             ->reactive()
                             ->afterStateUpdated(function ($state, $set, $get) {
-                                $set('net_pay', $get('gross_pay') + $get('overtime_pay') + $state - $get('deductions'));
+                                $set('net_pay', calculateNetPay($get));
                             }),
 
                         Forms\Components\TextInput::make('net_pay')
@@ -90,10 +98,10 @@ class PayslipResource extends Resource
                             ->prefixIcon('lucide-philippine-peso'),
 
                         Forms\Components\Select::make('payment_status')
-                            ->options([
-                                'pending' => 'Pending',
-                                'paid' => 'Paid',
-                            ])
+                            ->options(array_combine(
+                                array_map(fn ($status) => $status->value, PayslipStatusEnum::cases()),
+                                array_map(fn ($status) => $status->getLabel(), PayslipStatusEnum::cases())
+                            ))
                             ->default('pending')
                             ->required(),
                             ]),
@@ -137,6 +145,9 @@ class PayslipResource extends Resource
                 Tables\Columns\TextColumn::make('net_pay')->money('PHP'),
                 Tables\Columns\TextColumn::make('payment_status')
                     ->badge()
+                    ->color(fn ($record) => PayslipStatusEnum::tryFrom($record->payment_status)?->getColor())
+                    ->icon(fn ($record) => PayslipStatusEnum::tryFrom($record->payment_status)?->getIcon())
+
             ]);
     }
 

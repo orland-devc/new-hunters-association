@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\Salary\Resources\EmployeeResource\RelationManagers;
 
+use App\Enums\PayslipStatusEnum;
 use App\Filament\Clusters\Salary\Resources\PayslipResource;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -59,6 +60,8 @@ class PayslipRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('net_pay')->money('PHP'),
                 Tables\Columns\TextColumn::make('payment_status')
                     ->badge()
+                    ->color(fn ($record) => PayslipStatusEnum::tryFrom($record->payment_status)?->getColor())
+                    ->icon(fn ($record) => PayslipStatusEnum::tryFrom($record->payment_status)?->getIcon())
             ])
             ->filters([
                 //

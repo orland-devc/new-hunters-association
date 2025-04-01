@@ -5,14 +5,13 @@ use Filament\Support\Contracts\HasLabel;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasIcon;
 
-enum ReimbursementStatusEnum: string implements HasLabel, HasColor, HasIcon
+enum PayrollStatusEnum: string implements HasLabel, HasColor, HasIcon
 {
     case PENDING = 'pending';
     case APPROVED = 'approved';
     case REJECTED = 'rejected';
     case CANCELED = 'canceled';
-    case ADDED = 'added';
-    case REIMBURSED = 'reimbursed';
+    case COMPLETED = 'completed';
 
     public function getLabel(): string
     {
@@ -21,8 +20,7 @@ enum ReimbursementStatusEnum: string implements HasLabel, HasColor, HasIcon
             self::APPROVED => 'Approved',
             self::REJECTED => 'Rejected',
             self::CANCELED => 'Canceled',
-            self::ADDED => 'Added',
-            self::REIMBURSED => 'Reimbursed',
+            self::COMPLETED => 'Completed',
         };
     }
 
@@ -33,8 +31,7 @@ enum ReimbursementStatusEnum: string implements HasLabel, HasColor, HasIcon
             self::APPROVED => 'success',
             self::REJECTED => 'danger',
             self::CANCELED => 'tertiary',
-            self::ADDED => 'secondary',
-            self::REIMBURSED => 'secondary',
+            self::COMPLETED => 'secondary',
         };
     }
 
@@ -45,11 +42,9 @@ enum ReimbursementStatusEnum: string implements HasLabel, HasColor, HasIcon
             self::APPROVED => 'lucide-circle-check-big',
             self::REJECTED => 'lucide-ban',
             self::CANCELED => 'lucide-circle-x',
-            self::ADDED => 'lucide-circle-plus',
-            self::REIMBURSED => 'lucide-check-check',
+            self::COMPLETED => 'lucide-circle-plus',
         };
     }
-
 
     public static function values(): array
     {
@@ -57,3 +52,4 @@ enum ReimbursementStatusEnum: string implements HasLabel, HasColor, HasIcon
     }
 
 }
+

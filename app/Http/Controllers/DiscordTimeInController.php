@@ -12,7 +12,7 @@ class DiscordTimeInController extends Controller
 {
     public function index()
     {
-        $timeRecords = DiscordTimeIn::all();
+        $timeRecords = DiscordTimeIn::all()->sortByDesc('time_in');
         return view('discord_time_in.index', compact('timeRecords'));
     }
     

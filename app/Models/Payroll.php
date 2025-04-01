@@ -79,7 +79,7 @@ class Payroll extends Model
                 $employee->reimbursements()
                     ->where('status', 'approved')
                     ->whereBetween('requested_at', [$payroll->start_date, $payroll->end_date])
-                    ->update(['status' => 'reimbursed']);
+                    ->update(['payroll_id' => $payroll->id]);
 
                 $deductions = ( $grossPay + $otPay )* 0.10;
                 $netPay = $grossPay + $approvedReimbursements + $otPay - $deductions;
